@@ -1,0 +1,19 @@
+﻿<Application
+    x:Class="SketcherBook_Pro.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SketcherBook_Pro"
+    xmlns:Helpers="using:SketcherBook_Pro.Helpers"
+    RequestedTheme="Light">
+    
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Helpers:LocalisedStrings x:Key="Localised"/>
+        </ResourceDictionary>
+    </Application.Resources>
+
+</Application>

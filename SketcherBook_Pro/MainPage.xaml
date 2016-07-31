@@ -1,0 +1,405 @@
+﻿<Page
+    x:Class="SketcherBook_Pro.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:colorPicker="using:ColorPicker"
+    mc:Ignorable="d" Loaded="MainPage_OnLoaded" 
+    xmlns:Converters="using:SketcherBook_Pro.Converters" x:Name="LayoutRoot">
+
+    <Page.Resources>        
+        <!-- ReSharper disable Xaml.RedundantResource -->
+        
+        <!-- StoryBoards -->
+        <Storyboard x:Name="Intro_Animation">
+        </Storyboard>
+        <Storyboard x:Name="RecycleBin_OnDragEnter_Animation">
+        </Storyboard>
+        <Storyboard x:Name="RecycleBin_OnDragLeave_Animation">
+        </Storyboard>
+        <Storyboard x:Name="RightPanelHide_Animation">
+        </Storyboard>
+        <Storyboard x:Name="RightPanelShow_Animation">
+        </Storyboard>
+        <Storyboard x:Name="DeleteLayer_OnDragOver_Animation">
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Control.Background).(SolidColorBrush.Color)" Storyboard.TargetName="LayerDeleteButton">
+                <EasingColorKeyFrame KeyTime="0" Value="#33000000">
+                    <EasingColorKeyFrame.EasingFunction>
+                        <ExponentialEase EasingMode="EaseOut"/>
+                    </EasingColorKeyFrame.EasingFunction>
+                </EasingColorKeyFrame>
+                <EasingColorKeyFrame KeyTime="0:0:0.3" Value="Red">
+                    <EasingColorKeyFrame.EasingFunction>
+                        <ExponentialEase EasingMode="EaseOut"/>
+                    </EasingColorKeyFrame.EasingFunction>
+                </EasingColorKeyFrame>
+            </ColorAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Name="DeleteLayer_OnDragLeave_Animation">
+        </Storyboard>
+
+            <!-- Converters -->
+        <Converters:IntToDoubleConverter x:Key="IntToDoubleConverter" />
+        <Converters:HalfDoubleConverter x:Key="HalfDoubleConverter" />
+
+        <!-- ReSharper restore Xaml.RedundantResource -->    
+    </Page.Resources>
+
+    <Grid  x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="Mobile">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PenSettingsButtonFlyout.Placement" Value="Top"/>
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="Tablet">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="641" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PenSettingsButtonFlyout.Placement" Value="Right"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="LeftPanelColumnDefinition" Width="75"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition x:Name="RightPanelColumnDefinition" Width="75"/>
+        </Grid.ColumnDefinitions>
+
+        <SplitView Grid.Column="1" x:Name="Splitter" DisplayMode="Overlay" PaneClosed="SplitView_OnPaneClosed">
+            <SplitView.Pane>
+
+                <!-- Pen Settings -->
+                <StackPanel Padding="20,10" Background="{ThemeResource AppBarBackgroundThemeBrush}" BorderBrush="{ThemeResource FlipViewButtonPointerOverBorderThemeBrush}" BorderThickness="0,0,1,0">
+
+                    <StackPanel HorizontalAlignment="Center" Width="250">
+                        <TextBlock Text="{Binding [SIDEPANEL_FILE], Source={StaticResource Localised}}" Style="{StaticResource SidePanelTitle}"/>
+                        <Button x:Name="NewButton" Content="{Binding [ACTION_NEW], Source={StaticResource Localised}}"
+                                Tapped="OnClear" Style="{StaticResource SidePanelOptionButton}" />
+
+                        <Button x:Name="SaveButton"
+                                Content="{Binding [ACTION_SAVE], Source={StaticResource Localised}}"
+                                Tapped="OnSaveAsync" Style="{StaticResource SidePanelOptionButton}" />
+
+                        <Button x:Name="ShareButton"
+                                Content="{Binding [ACTION_SHARE], Source={StaticResource Localised}}"
+                                Tapped="OnShare" Style="{StaticResource SidePanelOptionButton}" />
+
+                        <Button x:Name="LoadButton"
+                                Content="{Binding [ACTION_LOAD], Source={StaticResource Localised}}"
+                                Tapped="OnLoadAsync" Style="{StaticResource SidePanelOptionButton}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,10" HorizontalAlignment="Center" Width="250">
+
+                        <ComboBox Header="{Binding [SIDEPANEL_SETTINGS_PAGEBACKGROUND], Source={StaticResource Localised}}" x:Name="GridBackground_ComboBox" MinWidth="110" SelectedIndex="0"
+                                  SelectionChanged="TriggerBackgroundColourChanged" Style="{StaticResource SidePanelComboBox}">
+                            <ComboBoxItem
+                                Content="{Binding [COLOUR_WHITE], Source={StaticResource Localised}}" />
+                            <ComboBoxItem
+                                Content="{Binding [COLOUR_BLACK], Source={StaticResource Localised}}" />
+                        </ComboBox>
+
+                        <ToggleSwitch x:Name="PenPressureToggleSwitch" Header="{Binding [SIDEPANEL_PRESSURE_TOGGLE], Source={StaticResource Localised}}" Toggled="PressureSetting_OnToggle" IsOn="True"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </SplitView.Pane>
+
+            <!-- Drawing Grid -->
+            <Grid x:Name="InkGrid" x:FieldModifier="public">
+                <InkCanvas x:Name="InkCanvas_Main" x:FieldModifier="public"  />
+                <ToggleButton Visibility="Collapsed" IsChecked="True" x:Name="RightPanelExpandButton" Content="&gt;" HorizontalAlignment="Right" VerticalAlignment="Center" Height="100" Tapped="RightPanelExpandButton_Tapped"  />
+            </Grid>
+        </SplitView>
+
+        <!-- Pop ups-->
+        <Popup Grid.Column="1" x:Name="SharePopUp" x:FieldModifier="public" HorizontalOffset="200">
+            <Popup.Transitions>
+                <TransitionCollection>
+                    <ContentThemeTransition/>
+                    <PopupThemeTransition/>
+                </TransitionCollection>
+            </Popup.Transitions>
+            <StackPanel Background="{ThemeResource SystemControlBackgroundBaseLowBrush}">
+                <StackPanel.Transitions>
+                    <TransitionCollection>
+                        <ContentThemeTransition/>
+                        <AddDeleteThemeTransition/>
+                        <EntranceThemeTransition/>
+                    </TransitionCollection>
+                </StackPanel.Transitions>
+                <Button x:Name="ShareFacebook" Content="{Binding [SHARE_FACEBOOK], Source={StaticResource Localised}}" Style="{StaticResource ShareButton}" Background="#3B579D" x:FieldModifier="public"/>
+                <Button x:Name="ShareTwitter" Content="{Binding [SHARE_TWITTER], Source={StaticResource Localised}}"  Style="{StaticResource ShareButton}" Background="#5EA9DD" x:FieldModifier="public"/>
+                <Button x:Name="ShareGoogle" Content="{Binding [SHARE_GOOGLEPLUS], Source={StaticResource Localised}}"  Style="{StaticResource ShareButton}" Background="#D94734" x:FieldModifier="public"/>
+                <Button x:Name="ShareClose" Content="{Binding [SHARE_CANCEL], Source={StaticResource Localised}}" Tapped="ShareCloseButton"  Style="{StaticResource ShareButton}" Background="Red" x:FieldModifier="public"/>
+            </StackPanel>
+        </Popup>
+        
+        <!-- Intro -->
+        <StackPanel Visibility="Collapsed" x:Name="IntroStack" Background="DodgerBlue" Grid.Column="1"   >
+            <TextBlock x:Name="sketch" Text="{Binding [INTRO_APPNAME_SKETCHER], Source={StaticResource Localised}}" Style="{StaticResource IntroTextBlock}" RenderTransformOrigin="0.5,0.5" >
+                <TextBlock.RenderTransform>
+                    <CompositeTransform/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <TextBlock x:Name="book" Text="{Binding [INTRO_APPNAME_BOOK], Source={StaticResource Localised}}" Style="{StaticResource IntroTextBlock}" RenderTransformOrigin="0.5,0.5" >
+                <TextBlock.RenderTransform>
+                    <CompositeTransform/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <TextBlock x:Name="pro" Text="{Binding [INTRO_APPNAME_PRO], Source={StaticResource Localised}}" Style="{StaticResource IntroTextBlock}" RenderTransformOrigin="0.5,0.5" >
+                <TextBlock.RenderTransform>
+                    <CompositeTransform/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <TextBlock x:Name="by" Text="{Binding [INTRO_APPNAME_BY], Source={StaticResource Localised}}" Style="{StaticResource IntroTextBlock}" RenderTransformOrigin="0.5,0.5" >
+                <TextBlock.RenderTransform>
+                    <CompositeTransform/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <TextBlock x:Name="lewis" Text="{Binding [INTRO_APPNAME_LEWIS], Source={StaticResource Localised}}" Style="{StaticResource IntroTextBlock}" RenderTransformOrigin="0.5,0.5" >
+                <TextBlock.RenderTransform>
+                    <CompositeTransform/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <TextBlock x:Name="johnson" Text="{Binding [INTRO_APPNAME_JOHNSON], Source={StaticResource Localised}}" Style="{StaticResource IntroTextBlock}" RenderTransformOrigin="0.5,0.5" >
+                <TextBlock.RenderTransform>
+                    <CompositeTransform/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+        </StackPanel>
+
+        <!-- Hamburrgah Buttons -->
+        <Border x:Name="border" Grid.Column="0" Background="{ThemeResource AppBarBackgroundThemeBrush}" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+                <CompositeTransform/>
+            </Border.RenderTransform>
+            <RelativePanel>
+                
+                <ToggleButton Tapped="Hamburger_Click" x:Name="HamburgerToggleButton" RelativePanel.AlignTopWithPanel="True" Style="{StaticResource SidePanelToggleButton}">
+                    <ToggleButton.Content>
+                        <FontIcon Style="{StaticResource SidePanelFontIcon}" x:Name="Hamburger" Glyph="&#xE700;"
+                                  ToolTipService.ToolTip="{Binding [TOOLTIP_MENU], Source={StaticResource Localised}}" RenderTransformOrigin="0.5,0.5" >
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform/>
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </ToggleButton.Content>
+                </ToggleButton>
+
+                <Button x:Name="PenSettingsButton" Style="{StaticResource SidePanelButton}" RelativePanel.Below="HamburgerToggleButton">
+                    <Button.Flyout>
+                        <Flyout x:Name="PenSettingsButtonFlyout" Placement="Right" Opened="PenSettingsButton_OnOpened" Closed="PenSettingsButton_OnClosed">
+                            <RelativePanel>
+                                <StackPanel>
+                                    <TextBlock
+                                        Text="{Binding [SIDEPANEL_SETTINGS_PEN], Source={StaticResource Localised}}"
+                                        Style="{StaticResource SidePanelSmallTitle}" FontSize="30"/>
+                                    <TextBlock x:Name="BrushStyle_TextBlock"
+                                               Text="{Binding [BRUSH_STYLE], Source={StaticResource Localised}}"
+                                               Style="{StaticResource SidePanelSubTitle}" />
+                                    <ComboBox x:Name="BrushStyle_ComboBox" MinWidth="110" SelectedIndex="0"
+                                              SelectionChanged="TriggerPenTypeChanged"
+                                              Style="{StaticResource SidePanelComboBox}" x:FieldModifier="public">
+                                        <ComboBoxItem
+                                            Content="{Binding [BRUSH_STYLE_BALLPOINT], Source={StaticResource Localised}}" />
+                                        <ComboBoxItem
+                                            Content="{Binding [BRUSH_STYLE_HIGHLIGHTER], Source={StaticResource Localised}}" />
+                                        <ComboBoxItem
+                                            Content="{Binding [BRUSH_STYLE_CALLIGRAPHY], Source={StaticResource Localised}}" />
+                                        <ComboBoxItem Content="{Binding [BRUSH_STYLE_SQUARE], Source={StaticResource Localised}}"></ComboBoxItem>
+                                    </ComboBox>
+
+                                    <RelativePanel >
+                                        <TextBlock x:Name="BrushThinkness_TextBlock"
+                                               Text="{Binding [BRUSH_THICKNESS], Source={StaticResource Localised}}"
+                                               Style="{StaticResource SidePanelSubTitle}" RelativePanel.AlignLeftWithPanel="True"/>
+
+                                        <TextBlock Text="{x:Bind BrushThinkess_Slider.Value, Mode=OneWay}" RelativePanel.AlignRightWithPanel="True" Style="{StaticResource SidePanelSubTitle}"/>
+
+                                        <Slider RelativePanel.Below="BrushThinkness_TextBlock" x:Name="BrushThinkess_Slider"
+                                            Minimum="1" Maximum="200" Value="5"
+                                            ValueChanged="BrushThinkess_Slider_ValueChanged" Width="230"
+                                            x:FieldModifier="public" />
+
+                                    </RelativePanel>
+
+                                    <StackPanel Margin="0,50,0,0">
+                                        <ToggleSwitch x:Name="CustomPropertiesToggleSwitch" Header="Custom Brush Propeties" IsOn="False" x:FieldModifier="public" Toggled="CustomPropertiesToggleSwitch_Toggled" />
+                                        <Slider x:Name="BrushWidth_Slider"
+                                                Minimum="1" Maximum="200" Value="5"
+                                                ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
+                                                x:FieldModifier="public" Header="{Binding [HEIGHT], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
+
+                                        <Slider x:Name="BrushHeight_Slider"
+                                                Minimum="1" Maximum="200" Value="5"
+                                                ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
+                                                x:FieldModifier="public" Header="{Binding [WIDTH], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
+
+                                        <Slider x:Name="BrushRotation_Slider"
+                                                Minimum="0" Maximum="360" Value="0"
+                                                ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
+                                                x:FieldModifier="public" Header="{Binding [ROTATION], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
+
+                                        <ComboBox SelectionChanged="CustomSettingsCombo_OnSelectionChanged" x:Name="CustomBrushStyle" x:FieldModifier="public" SelectedIndex="0" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}" Style="{StaticResource SidePanelComboBox}">
+                                            <ComboBoxItem Content="{Binding [CUSTOM_SQUARE], Source={StaticResource Localised}}"/>
+                                            <ComboBoxItem Content="{Binding [CUSTOM_CIRCLE], Source={StaticResource Localised}}"/>
+                                        </ComboBox>
+
+                                        <ToggleSwitch x:Name="CustomPropertiesHighlighterToggleSwitch" Header="Highlighter Mode" IsOn="False" x:FieldModifier="public" Toggled="CustomPropertiesHighliterMode_OnToggled" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </RelativePanel>
+                        </Flyout>
+                    </Button.Flyout>
+
+                    <Button.Content>
+                        <FontIcon Style="{StaticResource SidePanelFontIcon}" Glyph="&#xEB7E;"
+                                  ToolTipService.ToolTip="{Binding [TOOLTIP_PEN_SETTINGS], Source={StaticResource Localised}}" RenderTransformOrigin="0.5,0.5" />
+                    </Button.Content>
+                </Button>
+
+                <Button x:Name="LayerSettingsButton" Style="{StaticResource SidePanelButton}" RelativePanel.Below="PenSettingsButton">
+                    <Button.Flyout>
+                        <Flyout x:Name="LayersButtonFlyout" Placement="Right" Opened="LayersSettingsButton_OnOpened" Closed="LayersSettingsButton_OnClosed" >
+                            <RelativePanel>
+                                <StackPanel>
+                                    <RelativePanel MinWidth="300" Margin="0,0,0,20">
+                                        <TextBlock
+                                        Text="{Binding [SIDEPANEL_SETTINGS_LAYERS], Source={StaticResource Localised}}"
+                                        Style="{StaticResource SidePanelSmallTitle}" Margin="0" FontSize="30" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True"/>
+
+                                        <ToggleButton x:Name="LockLayersToggleButton" Checked="LockLayersToggleButtonChecked" Unchecked="LockLayersToggleButtonUnChecked" RelativePanel.AlignRightWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" >
+                                            <ToggleButton.Content>
+                                                <FontIcon x:Name="LockLayersFontIcon" Glyph="&#xE785;"/>
+                                            </ToggleButton.Content>
+                                        </ToggleButton>
+                                    </RelativePanel>
+
+                                    <ListView SelectionChanged="LayersView_OnSelectionChanged" DragItemsCompleted="LayersViewBase_OnDragItemsCompleted" DragItemsStarting="LayersListView_OnDragStarting" x:Name="LayersListBox" CanReorderItems="True" CanDragItems="True" AllowDrop="True" SelectionMode="Extended" ItemTemplate="{StaticResource LayersListViewItemTemplate}"/>
+
+                                    <Border BorderBrush="#FFBBBBBB" BorderThickness="0,1,0,0" Padding="0,2,0,0">
+                                        <RelativePanel>
+                                            <Button x:Name="LayerNewButton" Tapped="NewLayerButton_OnTapped" Padding="10" Content="New Layer" RelativePanel.AlignLeftWithPanel="True"/>
+                                            <Button x:Name="LayerDeleteButton" Drop="DeleteLayerButton_OnDrop"  Tapped="DeleteLayerButton_OnTapped" AllowDrop="True" Padding="10" Content="Delete Layer" RelativePanel.AlignRightWithPanel="True" DragEnter="DeleteLayerButton_OnDragEnter" DragOver="DeleteLayerButton_OnDragOver" DragLeave="DeleteLayerButton_OnDragLeave"/>
+                                        </RelativePanel>
+                                    </Border>
+                                </StackPanel>
+                            </RelativePanel>
+                        </Flyout>
+                    </Button.Flyout>
+
+                    <Button.Content>
+                        <FontIcon Style="{StaticResource SidePanelFontIcon}" Glyph="&#xE81E;" ToolTipService.ToolTip="{Binding [SIDEPANEL_SETTINGS_LAYERS], Source={StaticResource Localised}}"/>
+                    </Button.Content>
+                </Button>
+
+                <Button Tapped="UndoButton_OnTapped" x:Name="UndoActionButton" Style="{StaticResource SidePanelButton}" RelativePanel.Above="FullScreenToggleButton">
+                    <Button.Content>
+                        <FontIcon Style="{StaticResource SidePanelFontIcon}" Glyph="&#xE10E;"
+                                  ToolTipService.ToolTip="{Binding [TOOLTIP_PEN_SETTINGS], Source={StaticResource Localised}}" />
+                    </Button.Content>
+                </Button>
+
+                <ToggleButton x:Name="FullScreenToggleButton"  Checked="FullScreen_OnChecked" Unchecked="FullScreen_OnUnChecked" RelativePanel.AlignBottomWithPanel="True" Style="{StaticResource SidePanelToggleButton}">
+                    <ToggleButton.Content>
+                        <FontIcon Style="{StaticResource SidePanelFontIcon}" Glyph="&#xE740;"
+                                  ToolTipService.ToolTip="{Binding [TOOLTIP_FULLSCREEN_MODE], Source={StaticResource Localised}}" x:Name="ExpandToFullscreenToggleButton" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform/>
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </ToggleButton.Content>
+                </ToggleButton>
+
+            </RelativePanel>
+        </Border>
+
+        <!-- Pen Colour Picker -->
+        <Grid Width="75" x:Name="RightPanel_Grid" Grid.Column="2" Background="{ThemeResource AppBarBackgroundThemeBrush}" BorderBrush="{ThemeResource FlipViewButtonPointerOverBorderThemeBrush}" BorderThickness="1,0,0,0" >
+            <Grid.RenderTransform>
+                <CompositeTransform/>
+            </Grid.RenderTransform>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="75"/>
+                <RowDefinition Height="75"/>
+            </Grid.RowDefinitions>
+
+            <ScrollViewer Grid.Row="0"
+                      HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto" x:FieldModifier="public" x:Name="ColourPalleteScrollViewer" HorizontalAlignment="Center" VerticalAlignment="Center" >
+
+                <ListView VerticalContentAlignment="Top" DragItemsCompleted="ColourListViewBase_OnDragItemsCompleted"
+                          x:Name="ColourListView" SelectionChanged="TriggerPenColourChange"
+                          SelectionMode="Extended" IsItemClickEnabled="True" IsSwipeEnabled="True"
+                          CanReorderItems="True" CanDragItems="True" AllowDrop="True"
+                          IsRightTapEnabled="True" TabNavigation="Cycle" x:FieldModifier="public"
+                          DragItemsStarting="ListViewBase_OnDragItemsStarting"
+                          ItemContainerStyle="{StaticResource ColourOptionListView}">
+                </ListView>
+            </ScrollViewer>
+
+            <Button Grid.Row="1" Style="{StaticResource SidePanelButton}" >
+                <Button.Flyout>
+                    <Flyout Placement="Right" >
+                        <StackPanel Width="300" Height="Auto" Padding="10">
+                            <colorPicker:ColorPicker  x:Name="NewColourPicker" BlueValue="50" RedValue="150" GreenValue="100" />
+
+                            <Slider Header="{Binding [COLOUR_RED], Source={StaticResource Localised}}" x:Name="ColourPickerRedSlider" Minimum="0" Maximum="255" Value="{x:Bind NewColourPicker.RedValue, Mode=TwoWay, Converter={StaticResource IntToDoubleConverter}}" Style="{StaticResource ColourPickerFlyoutSliders}">
+                                <Slider.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Foreground="Red" SelectionHighlightColor="{x:Null}"/>
+                                    </DataTemplate>
+                                </Slider.HeaderTemplate>
+                            </Slider>
+                            <Slider Header="{Binding [COLOUR_GREEN], Source={StaticResource Localised}}" Minimum="0" Maximum="255" Value="{x:Bind NewColourPicker.GreenValue, Mode=TwoWay, Converter={StaticResource IntToDoubleConverter}}" Style="{StaticResource ColourPickerFlyoutSliders}">
+                                <Slider.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Foreground="Green" SelectionHighlightColor="{x:Null}"/>
+                                    </DataTemplate>
+                                </Slider.HeaderTemplate>
+                            </Slider>
+                            <Slider Header="{Binding [COLOUR_BLUE], Source={StaticResource Localised}}" Minimum="0" Maximum="255" Value="{x:Bind NewColourPicker.BlueValue, Mode=TwoWay, Converter={StaticResource IntToDoubleConverter}}" Style="{StaticResource ColourPickerFlyoutSliders}">
+                                <Slider.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Foreground="Blue" SelectionHighlightColor="{x:Null}"/>
+                                    </DataTemplate>
+                                </Slider.HeaderTemplate>
+                            </Slider>
+
+                            <Button Tapped="AddColourFromPicker_OnTapped" Content="{Binding [ACTION_PICKER_BUTTON_ADD], Source={StaticResource Localised}}" Style="{StaticResource ColourPickerFlyoutButton}"/>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+                <Button.Content>
+                    <FontIcon Foreground="Black" x:Name="NewColourButton" FontFamily="Segoe MDL2 Assets" Glyph="&#xE109;" FontSize="30"/>
+                </Button.Content>
+            </Button>
+
+            <ToggleButton IsHitTestVisible="True" x:Name="Brush_Erase_ToggleButton" Drop="RecycleBin_OnDrop" AllowDrop="True" 
+                          DragOver="RecycleBin_OnDragOver" DragEnter="RecycleBin_OnDragEnter" DragLeave="RecycleBin_OnDragLeave" Grid.Row="2" 
+                          Checked="ErasingModeCheckBox_Checked" Unchecked="ErasingModeCheckBox_Unchecked" Style="{StaticResource SidePanelToggleButton}" >
+                <ToggleButton.Content>
+                    <FontIcon x:Name="fontIcon" Foreground="Black" FontFamily="Segoe MDL2 Assets" Glyph="&#xE107;" FontSize="30" RenderTransformOrigin="0.5,0.5">
+                        <FontIcon.RenderTransform>
+                            <CompositeTransform/>
+                        </FontIcon.RenderTransform>
+                    </FontIcon>
+                </ToggleButton.Content>
+            </ToggleButton>
+        </Grid>
+
+    </Grid>
+</Page>
