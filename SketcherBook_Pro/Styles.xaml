@@ -20,9 +20,9 @@
 
     <Style x:Key="SidePanelFontIcon" TargetType="FontIcon">
         <Setter Property="Foreground" Value="Black" />
-        <Setter Property="FontSize" Value="30"/>
-        <Setter Property="Height" Value="50"/>
-        <Setter Property="Width" Value="50"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="Width" Value="25"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
@@ -55,8 +55,8 @@
     </Style>
 
     <Style x:Key="SidePanelToggleButton" TargetType="ToggleButton">
-        <Setter Property="Width" Value="75"/>
-        <Setter Property="Height" Value="75"/>
+        <Setter Property="Width" Value="50"/>
+        <Setter Property="Height" Value="50"/>
     </Style>
 
     <Style x:Key="SidePanelTitle" TargetType="TextBlock">
@@ -88,13 +88,13 @@
     </Style>
 
     <Style x:Key="ColourOptionRectangle" TargetType="Rectangle" >
-        <Setter Property="Height" Value="65"/>
-        <Setter Property="Width" Value="64"/>
+        <Setter Property="Height" Value="50"/>
+        <Setter Property="Width" Value="50"/>
 
     </Style>
 
     <Style x:Key="ColourOptionListView" TargetType="ListViewItem">
-        <Setter Property="Height" Value="75"/>
+        <Setter Property="Height" Value="50"/>
         <Setter Property="Padding" Value="5.5,0,0,0"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
     </Style>
@@ -208,8 +208,8 @@
     </Style>
 
     <Style x:Key="SidePanelButton" TargetType="Button">
-        <Setter Property="Height" Value="75"/>
-        <Setter Property="Width" Value="75"/>
+        <Setter Property="Height" Value="50"/>
+        <Setter Property="Width" Value="50"/>
     </Style>
 
     <Style x:Key="SidePanelOptionButton" TargetType="Button">

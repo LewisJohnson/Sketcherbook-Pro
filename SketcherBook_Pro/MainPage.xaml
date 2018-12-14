@@ -37,47 +37,31 @@
 
     </Page.Resources>
 
-    <Grid  x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Name="LeftPanelColumnDefinition" Width="75"/>
+            <ColumnDefinition x:Name="LeftPanelColumnDefinition" Width="50"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition x:Name="RightPanelColumnDefinition" Width="75"/>
+            <ColumnDefinition x:Name="RightPanelColumnDefinition" Width="50"/>
         </Grid.ColumnDefinitions>
 
         <SplitView Grid.Column="1" x:Name="Splitter" DisplayMode="Overlay" PaneClosed="SplitView_OnPaneClosed">
             <SplitView.Pane>
-
-                <!-- Pen Settings -->
-                <StackPanel Padding="20,10" Background="{ThemeResource AppBarBackgroundThemeBrush}" BorderBrush="{ThemeResource FlipViewButtonPointerOverBorderThemeBrush}" BorderThickness="0,0,1,0">
+                <StackPanel Padding="20,10" Background="{ThemeResource NavigationViewDefaultPaneBackground}" BorderBrush="{ThemeResource FlipViewButtonPointerOverBorderThemeBrush}" BorderThickness="0,0,1,0">
 
                     <StackPanel HorizontalAlignment="Center" Width="250">
                         <TextBlock Text="{Binding [SIDEPANEL_FILE], Source={StaticResource Localised}}" Style="{StaticResource SidePanelTitle}"/>
-                        <Button x:Name="NewButton" Content="{Binding [ACTION_NEW], Source={StaticResource Localised}}"
-                                Tapped="OnClear" Style="{StaticResource SidePanelOptionButton}" />
-
-                        <Button x:Name="SaveButton"
-                                Content="{Binding [ACTION_SAVE], Source={StaticResource Localised}}"
-                                Tapped="OnSaveAsync" Style="{StaticResource SidePanelOptionButton}" />
-
-                        <!-- Does this even work? -->
-                        <!--<Button x:Name="ShareButton"
-                                Content="{Binding [ACTION_SHARE], Source={StaticResource Localised}}"
-                                Tapped="OnShare" Style="{StaticResource SidePanelOptionButton}" />-->
-
-                        <Button x:Name="LoadButton"
-                                Content="{Binding [ACTION_LOAD], Source={StaticResource Localised}}"
-                                Tapped="OnLoadAsync" Style="{StaticResource SidePanelOptionButton}" />
+                        <Button x:Name="NewButton" Tapped="OnClear" Content="{Binding [ACTION_NEW], Source={StaticResource Localised}}"  Style="{StaticResource SidePanelOptionButton}" />
+                        <Button x:Name="SaveButton" Tapped="OnSaveAsync" Content="{Binding [ACTION_SAVE], Source={StaticResource Localised}}" Style="{StaticResource SidePanelOptionButton}" />
+                        <Button x:Name="LoadButton" Tapped="OnLoadAsync" Content="{Binding [ACTION_LOAD], Source={StaticResource Localised}}" Style="{StaticResource SidePanelOptionButton}" />
                     </StackPanel>
 
                     <StackPanel Margin="0,10" HorizontalAlignment="Center" Width="250">
 
-                        <ComboBox Header="{Binding [SIDEPANEL_SETTINGS_PAGEBACKGROUND], Source={StaticResource Localised}}" x:Name="GridBackground_ComboBox" MinWidth="110" SelectedIndex="0"
-                                  SelectionChanged="TriggerBackgroundColourChanged" Style="{StaticResource SidePanelComboBox}">
-                            <ComboBoxItem
-                                Content="{Binding [COLOUR_WHITE], Source={StaticResource Localised}}" />
-                            <ComboBoxItem
-                                Content="{Binding [COLOUR_BLACK], Source={StaticResource Localised}}" />
+                        <ComboBox Header="{Binding [SIDEPANEL_SETTINGS_PAGEBACKGROUND], Source={StaticResource Localised}}" x:Name="GridBackground_ComboBox" MinWidth="110" SelectedIndex="0" SelectionChanged="TriggerBackgroundColourChanged" Style="{StaticResource SidePanelComboBox}">
+                            <ComboBoxItem Content="{Binding [COLOUR_WHITE], Source={StaticResource Localised}}" />
+                            <ComboBoxItem Content="{Binding [COLOUR_BLACK], Source={StaticResource Localised}}" />
+                            <ComboBoxItem Content="{Binding [COLOUR_BLACK], Source={StaticResource Localised}}" />
                         </ComboBox>
 
                         <ToggleSwitch x:Name="PenPressureToggleSwitch" Header="{Binding [SIDEPANEL_PRESSURE_TOGGLE], Source={StaticResource Localised}}" Toggled="PressureSetting_OnToggle" IsOn="True"/>
@@ -87,35 +71,12 @@
             </SplitView.Pane>
 
             <!-- Drawing Grid -->
-            <Grid x:Name="CanvasContainer" x:FieldModifier="public" Background="DimGray">
-                <Grid x:Name="InkGrid" x:FieldModifier="public" Margin="75,75,75,75" Background="White">
-                    <InkCanvas x:Name="InkCanvas_Main" x:FieldModifier="public"  />
+            <ScrollViewer ZoomMode="Enabled" MinZoomFactor="0.1" MaxZoomFactor="100" Background="DimGray">
+                <Grid x:Name="CanvasContainer" x:FieldModifier="public" Background="White" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="800" Height="500" >
+                    <InkCanvas x:Name="InkCanvas" x:FieldModifier="public"  />
                 </Grid>
-            </Grid>
+            </ScrollViewer>
         </SplitView>
-
-        <!-- Pop ups-->
-        <Popup Grid.Column="1" x:Name="SharePopUp" x:FieldModifier="public" HorizontalOffset="200">
-            <Popup.Transitions>
-                <TransitionCollection>
-                    <ContentThemeTransition/>
-                    <PopupThemeTransition/>
-                </TransitionCollection>
-            </Popup.Transitions>
-            <StackPanel Background="{ThemeResource SystemControlBackgroundBaseLowBrush}">
-                <StackPanel.Transitions>
-                    <TransitionCollection>
-                        <ContentThemeTransition/>
-                        <AddDeleteThemeTransition/>
-                        <EntranceThemeTransition/>
-                    </TransitionCollection>
-                </StackPanel.Transitions>
-                <Button x:Name="ShareFacebook" Content="{Binding [SHARE_FACEBOOK], Source={StaticResource Localised}}" Style="{StaticResource ShareButton}" Background="#3B579D" x:FieldModifier="public"/>
-                <Button x:Name="ShareTwitter" Content="{Binding [SHARE_TWITTER], Source={StaticResource Localised}}"  Style="{StaticResource ShareButton}" Background="#5EA9DD" x:FieldModifier="public"/>
-                <Button x:Name="ShareGoogle" Content="{Binding [SHARE_GOOGLEPLUS], Source={StaticResource Localised}}"  Style="{StaticResource ShareButton}" Background="#D94734" x:FieldModifier="public"/>
-                <Button x:Name="ShareClose" Content="{Binding [SHARE_CANCEL], Source={StaticResource Localised}}" Tapped="ShareCloseButton"  Style="{StaticResource ShareButton}" Background="Red" x:FieldModifier="public"/>
-            </StackPanel>
-        </Popup>
 
         <!-- Intro -->
         <StackPanel Visibility="Collapsed" x:Name="IntroStack" Background="DodgerBlue" Grid.Column="1"   >
@@ -152,7 +113,7 @@
         </StackPanel>
 
         <!-- Hamburrgah Buttons -->
-        <Border x:Name="border" Grid.Column="0" Background="{ThemeResource AppBarBackgroundThemeBrush}" RenderTransformOrigin="0.5,0.5">
+        <Border Grid.Column="0" Background="{ThemeResource AppBarBackgroundThemeBrush}" RenderTransformOrigin="0.5,0.5">
             <Border.RenderTransform>
                 <CompositeTransform/>
             </Border.RenderTransform>
@@ -174,25 +135,11 @@
                         <Flyout x:Name="PenSettingsButtonFlyout" Placement="Right" Opened="PenSettingsButton_OnOpened" Closed="PenSettingsButton_OnClosed">
                             <RelativePanel>
                                 <StackPanel>
-                                    <TextBlock
-                                        Text="{Binding [SIDEPANEL_SETTINGS_PEN], Source={StaticResource Localised}}"
-                                        Style="{StaticResource SidePanelSmallTitle}" FontSize="30"/>
-                                    <TextBlock x:Name="BrushStyle_TextBlock"
-                                               Text="{Binding [BRUSH_STYLE], Source={StaticResource Localised}}"
-                                               Style="{StaticResource SidePanelSubTitle}" />
-                                    <ComboBox x:Name="BrushStyleComboBox" MinWidth="110" SelectedIndex="0"
-                                              SelectionChanged="TriggerPenTypeChanged"
-                                              Style="{StaticResource SidePanelComboBox}" x:FieldModifier="public">
-                                        <ComboBoxItem
-                                            Content="{Binding [BRUSH_STYLE_BALLPOINT], Source={StaticResource Localised}}" />
-                                        <ComboBoxItem
-                                            Content="{Binding [BRUSH_STYLE_HIGHLIGHTER], Source={StaticResource Localised}}" />
-                                        <ComboBoxItem
-                                            Content="{Binding [BRUSH_STYLE_CALLIGRAPHY], Source={StaticResource Localised}}" />
-                                        <ComboBoxItem Content="{Binding [BRUSH_STYLE_SQUARE], Source={StaticResource Localised}}"></ComboBoxItem>
-                                    </ComboBox>
+                                    <TextBlock Text="{Binding [SIDEPANEL_SETTINGS_PEN], Source={StaticResource Localised}}" Style="{StaticResource SidePanelSmallTitle}" FontSize="30"/>
+                                    <TextBlock x:Name="BrushStyle_TextBlock" Text="{Binding [BRUSH_STYLE], Source={StaticResource Localised}}" Style="{StaticResource SidePanelSubTitle}" />
+                                    <ComboBox x:FieldModifier="public" x:Name="BrushStyleComboBox" MinWidth="110" SelectionChanged="TriggerBrushTypeChanged" Style="{StaticResource SidePanelComboBox}"/>
 
-                                    <RelativePanel >
+                                        <RelativePanel >
                                         <TextBlock x:Name="BrushThinkness_TextBlock"
                                                Text="{Binding [BRUSH_THICKNESS], Source={StaticResource Localised}}"
                                                Style="{StaticResource SidePanelSubTitle}" RelativePanel.AlignLeftWithPanel="True"/>
@@ -210,17 +157,17 @@
                                         <ToggleSwitch x:Name="CustomPropertiesToggleSwitch" Header="Custom Brush Propeties" IsOn="False" x:FieldModifier="public" Toggled="CustomPropertiesToggleSwitch_Toggled" />
                                         <Slider x:Name="BrushWidthSlider"
                                                 Minimum="1" Maximum="200" Value="5"
-                                                ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
+                                                ValueChanged="CustomBrushSizeSliderOnValueChanged" Width="230"
                                                 x:FieldModifier="public" Header="{Binding [HEIGHT], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
 
                                         <Slider x:Name="BrushHeightSlider"
                                                 Minimum="1" Maximum="200" Value="5"
-                                                ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
+                                                ValueChanged="CustomBrushSizeSliderOnValueChanged" Width="230"
                                                 x:FieldModifier="public" Header="{Binding [WIDTH], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
 
                                         <Slider x:Name="BrushRotation_Slider"
                                                 Minimum="0" Maximum="360" Value="0"
-                                                ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
+                                                ValueChanged="CustomBrushSizeSliderOnValueChanged" Width="230"
                                                 x:FieldModifier="public" Header="{Binding [ROTATION], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
 
                                         <ComboBox SelectionChanged="CustomSettingsCombo_OnSelectionChanged" x:Name="CustomBrushStyle" x:FieldModifier="public" SelectedIndex="0" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}" Style="{StaticResource SidePanelComboBox}">
@@ -298,14 +245,14 @@
         </Border>
 
         <!-- Pen Colour Picker -->
-        <Grid Width="75" x:Name="RightPanel_Grid" Grid.Column="2" Background="{ThemeResource AppBarBackgroundThemeBrush}" BorderBrush="{ThemeResource FlipViewButtonPointerOverBorderThemeBrush}" BorderThickness="1,0,0,0" >
+        <Grid x:Name="RightPanel_Grid" Grid.Column="2" Background="{ThemeResource AppBarBackgroundThemeBrush}" BorderBrush="{ThemeResource FlipViewButtonPointerOverBorderThemeBrush}" BorderThickness="1,0,0,0" >
             <Grid.RenderTransform>
                 <CompositeTransform/>
             </Grid.RenderTransform>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="75"/>
-                <RowDefinition Height="75"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
 
             <ScrollViewer Grid.Row="0"

@@ -18,7 +18,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Shapes;
-using Brush = SketcherBook_Pro.Helpers.Brush;
+using CanvasBrush = SketcherBook_Pro.Helpers.CanvasBrush;
 
 namespace SketcherBook_Pro
 {
@@ -26,10 +26,8 @@ namespace SketcherBook_Pro
 	public sealed partial class MainPage
 	{
 		public ImageProcessing ImageProcessing { get; set; }
-		public Brush Brush { get; set; }
-		public ShareImage ShareImage { get; set; }
+		public CanvasBrush Brush { get; set; }
 		public static KeyboardShortcuts KeyboardShortcuts { get; private set; }
-		public double PenThickness;
 
 		private readonly ObservableCollection<InkAction> cachedInkStrokesCollection = new ObservableCollection<InkAction>();
 		private readonly ObservableCollection<Rectangle> brushColourCollection = new ObservableCollection<Rectangle>();
@@ -45,100 +43,89 @@ namespace SketcherBook_Pro
 
 		public MainPage()
 		{
-			ImageProcessing = new ImageProcessing(this);
-			KeyboardShortcuts = new KeyboardShortcuts(this);
-			Brush = new Brush(this);
-			ShareImage = new ShareImage(this);
+			ImageProcessing = new ImageProcessing();
+			KeyboardShortcuts = new KeyboardShortcuts();
+			Brush = new CanvasBrush();
+
 			InitializeComponent();
 
-			ObservableCollection<SolidColorBrush> brushColourCollection = Initialisers.PopulateInitialColourCollection();
+			ObservableCollection<SolidColorBrush> defaultBrushColourCollection = Initialisers.PopulateInitialColourCollection();
 
-			foreach (SolidColorBrush item in brushColourCollection)
+			foreach (SolidColorBrush colourOption in defaultBrushColourCollection)
 			{
-				this.brushColourCollection.Add(new Rectangle
+				brushColourCollection.Add(new Rectangle
 				{
 					Style = (Style)Application.Current.Resources["ColourOptionRectangle"],
-					Fill = item
+					Fill = colourOption
 				});
 			}
-			this.InkCanvas_Main.InkPresenter.UpdateDefaultDrawingAttributes(Initialisers.InitialDrawingAttributes());
-			this.InkCanvas_Main.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse | CoreInputDeviceTypes.Pen |
-														   CoreInputDeviceTypes.Touch;
 
-		}
+			InkCanvas.InkPresenter.UpdateDefaultDrawingAttributes(Initialisers.InitialDrawingAttributes());
+			InkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse | CoreInputDeviceTypes.Pen | CoreInputDeviceTypes.Touch;
 
-		private void MainPage_OnLoaded(object sender, RoutedEventArgs e)
-		{
-			this.IntroAnimation.Begin();
 			PopulateElements();
 			SetTriggers();
 		}
 
+		private void MainPage_OnLoaded(object sender, RoutedEventArgs e)
+		{
+			IntroAnimation.Begin();
+		}
+
 		private void PopulateElements()
 		{
-			this.InkCanvas_Main.InkPresenter.StrokeContainer = LayerManager.GlobalInkLayers.First().LayerStrokeContainer;
-			this.ColourListView.ItemsSource = this.brushColourCollection;
-			this.LayersListBox.ItemsSource = LayerManager.GlobalInkLayers;
+			InkCanvas.InkPresenter.StrokeContainer = LayerManager.GlobalInkLayers.First().LayerStrokeContainer;
+			ColourListView.ItemsSource = brushColourCollection;
+			LayersListBox.ItemsSource = LayerManager.GlobalInkLayers;
+
+			IEnumerable<BrushStyle> brushStyles = Enum.GetValues(typeof(BrushStyle)).Cast<BrushStyle>();
+			BrushStyleComboBox.ItemsSource = brushStyles.ToList();
+			BrushStyleComboBox.SelectedIndex = 0;
 		}
 
 		private void SetTriggers()
 		{
-			this.ShareFacebook.Tapped += ShareImage.ShareFacebook;
-			this.ShareTwitter.Tapped += ShareImage.ShareTwitter;
-			this.ShareGoogle.Tapped += ShareImage.ShareGoogle;
-
-			this.InkCanvas_Main.InkPresenter.StrokesCollected += InkPresenterOnStrokesCollected;
-			this.InkCanvas_Main.InkPresenter.StrokesErased += InkPresenterOnStrokesErased;
+			InkCanvas.InkPresenter.StrokesCollected += InkPresenterOnStrokesCollected;
+			InkCanvas.InkPresenter.StrokesErased += InkPresenterOnStrokesErased;
 		}
-
-		private void OnShare(object sender, RoutedEventArgs e)
-		{
-			this.SharePopUp.IsOpen = this.SharePopUp.IsOpen == false;
-		}
-
-		private void ShareCloseButton(object sender, TappedRoutedEventArgs e)
-		{
-			this.SharePopUp.IsOpen = false;
-		}
-
 
 		//Undo Functions
 		private void InkPresenterOnStrokesErased(InkPresenter sender, InkStrokesErasedEventArgs args)
 		{
 			foreach (InkStroke item in args.Strokes)
 			{
-				this.cachedInkStrokesCollection.Add(new InkAction(item, InkActionType.Erased));
+				cachedInkStrokesCollection.Add(new InkAction(item, InkActionType.Erased));
 			}
 		}
 		private void InkPresenterOnStrokesCollected(InkPresenter sender, InkStrokesCollectedEventArgs args)
 		{
 			foreach (InkStroke item in args.Strokes)
 			{
-				this.cachedInkStrokesCollection.Add(new InkAction(item, InkActionType.Collected));
+				cachedInkStrokesCollection.Add(new InkAction(item, InkActionType.Collected));
 			}
 
 		}
 		private void UndoButton_OnTapped(object sender, TappedRoutedEventArgs e)
 		{
-			InkAction item = this.cachedInkStrokesCollection.Last();
+			InkAction item = cachedInkStrokesCollection.Last();
 			if (item.Action == InkActionType.Collected)
 			{
-				throw new NotImplementedException();
+				cachedInkStrokesCollection.Remove(item);
 			}
 			else if (item.Action == InkActionType.Erased)
 			{
-				throw new NotImplementedException();
+				cachedInkStrokesCollection.Remove(item);
 			}
 		}
 
 		private void OnClear(object sender, RoutedEventArgs e)
 		{
-			this.InkCanvas_Main.InkPresenter.StrokeContainer.Clear();
+			InkCanvas.InkPresenter.StrokeContainer.Clear();
 		}
 
 		private void OnSaveAsync(object sender, RoutedEventArgs e)
 		{
-			ImageProcessing.OnSaveAsync(sender, e);
+			ImageProcessing.OnSaveAsync(InkCanvas.InkPresenter.StrokeContainer);
 		}
 
 		private void OnLoadAsync(object sender, RoutedEventArgs e)
@@ -148,55 +135,102 @@ namespace SketcherBook_Pro
 
 		private void BrushThinkess_Slider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
 		{
-			Brush.BrushThicknessChanger();
+			if (BrushStyleComboBox.SelectedItem == null)
+			{
+				return;
+			}
+
+			BrushStyle brushStyle = (BrushStyle)BrushStyleComboBox.SelectedItem;
+			InkDrawingAttributes inkAttr = Brush.UpdateBrushSize(brushStyle, e.NewValue, e.NewValue);
+			InkCanvas.InkPresenter.UpdateDefaultDrawingAttributes(inkAttr);
 		}
 
 		private void TriggerPenColourChange(object sender, SelectionChangedEventArgs e)
 		{
-			Brush.TriggerPenColourChange(sender, e);
+			if (BrushStyleComboBox.SelectedItem == null)
+			{
+				return;
+			}
+
+			BrushStyle brushStyle = (BrushStyle)BrushStyleComboBox.SelectedItem;
+			ListView colourListView = sender as ListView;
+
+			Color firstColour = new Color();
+			Color? secondColour = null;
+
+			if (colourListView.SelectedItems.Count == 1)
+			{
+				Rectangle selectedColour = colourListView.SelectedItem as Rectangle;
+				SolidColorBrush color1 = selectedColour.Fill as SolidColorBrush;
+
+				firstColour = color1.Color;
+			}
+			else if (colourListView.SelectedItems.Count > 1)
+			{
+				Rectangle firstSelectedColour = colourListView.SelectedItems[0] as Rectangle;
+				Rectangle secondSelectedColour = colourListView.SelectedItems[1] as Rectangle;
+
+				SolidColorBrush color1 = firstSelectedColour.Fill as SolidColorBrush;
+				SolidColorBrush color2 = secondSelectedColour.Fill as SolidColorBrush;
+
+				firstColour = color1.Color;
+				secondColour = color2.Color;
+			}
+
+			InkDrawingAttributes inkAttr = Brush.UpdateBrushColour(firstColour, secondColour);
+
+			InkCanvas.InkPresenter.UpdateDefaultDrawingAttributes(inkAttr);
 		}
 
-		private void TriggerPenTypeChanged(object sender, RoutedEventArgs e)
+		private void TriggerBrushTypeChanged(object sender, RoutedEventArgs e)
 		{
-			Brush.TriggerPenTypeChanged();
+			if (BrushStyleComboBox.SelectedItem == null)
+			{
+				return;
+			}
+
+			BrushStyle brushStyle = (BrushStyle)BrushStyleComboBox.SelectedItem;
+			InkDrawingAttributes inkAttr = Brush.UpdateBrushType(brushStyle);
+
+			InkCanvas.InkPresenter.UpdateDefaultDrawingAttributes(inkAttr);
 		}
 
 		private void ErasingModeCheckBox_Checked(object sender, RoutedEventArgs e)
 		{
-			this.InkCanvas_Main.InkPresenter.InputProcessingConfiguration.Mode = InkInputProcessingMode.Erasing;
+			InkCanvas.InkPresenter.InputProcessingConfiguration.Mode = InkInputProcessingMode.Erasing;
 		}
 
 		private void ErasingModeCheckBox_Unchecked(object sender, RoutedEventArgs e)
 		{
-			this.InkCanvas_Main.InkPresenter.InputProcessingConfiguration.Mode = InkInputProcessingMode.Inking;
+			InkCanvas.InkPresenter.InputProcessingConfiguration.Mode = InkInputProcessingMode.Inking;
 		}
 
 		private void Hamburger_Click(object sender, RoutedEventArgs e)
 		{
-			this.Splitter.IsPaneOpen = (this.Splitter.IsPaneOpen != true);
+			Splitter.IsPaneOpen = (Splitter.IsPaneOpen != true);
 		}
 
 		//Recycle Bin functions
 		private void RecycleBin_OnDrop(object sender, DragEventArgs e)
 		{
-			foreach (Rectangle obj in this.dragedColoursCollection)
+			foreach (Rectangle obj in dragedColoursCollection)
 			{
-				this.brushColourCollection.Remove(obj);
+				brushColourCollection.Remove(obj);
 			}
 
-			if (this.dragedColoursCollection.Count > 0)
+			if (dragedColoursCollection.Count > 0)
 			{
-				this.RecycleBin_OnDragLeave_Animation.Begin();
+				RecycleBin_OnDragLeave_Animation.Begin();
 			}
 
-			this.dragedColoursCollection.Clear();
+			dragedColoursCollection.Clear();
 		}
 		private void RecycleBin_OnDragOver(object sender, DragEventArgs e)
 		{
-			if (this.dragedColoursCollection.Count > 0)
+			if (dragedColoursCollection.Count > 0)
 			{
 				e.AcceptedOperation = DataPackageOperation.Move;
-				e.DragUIOverride.Caption = string.Format(CultureInfo.CurrentCulture, ResourceLoader.GetForViewIndependentUse().GetString("TOOLTIP_REMOVE_COLOURS"), this.dragedColoursCollection.Count);
+				e.DragUIOverride.Caption = string.Format(CultureInfo.CurrentCulture, ResourceLoader.GetForViewIndependentUse().GetString("TOOLTIP_REMOVE_COLOURS"), dragedColoursCollection.Count);
 				e.DragUIOverride.IsContentVisible = false;
 			}
 			else
@@ -207,30 +241,39 @@ namespace SketcherBook_Pro
 
 		private void RecycleBin_OnDragEnter(object sender, DragEventArgs e)
 		{
-			this.RecycleBin_OnDragEnter_Animation.Begin();
+			RecycleBin_OnDragEnter_Animation.Begin();
 		}
 
 		private void RecycleBin_OnDragLeave(object sender, DragEventArgs e)
 		{
-			this.RecycleBin_OnDragLeave_Animation.Begin();
+			RecycleBin_OnDragLeave_Animation.Begin();
 		}
 
 		private void ListViewBase_OnDragItemsStarting(object sender, DragItemsStartingEventArgs e)
 		{
 			foreach (object item in e.Items)
 			{
-				this.dragedColoursCollection.Add(item as Rectangle);
+				dragedColoursCollection.Add(item as Rectangle);
 			}
 		}
 
 		private void ColourListViewBase_OnDragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
 		{
-			this.dragedColoursCollection.Clear();
+			dragedColoursCollection.Clear();
 		}
 
 		//Custom Properties Functions
-		private void CustomeSettingSlider_OnValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+		private void CustomBrushSizeSliderOnValueChanged(object sender, RangeBaseValueChangedEventArgs e)
 		{
+			if (BrushStyleComboBox.SelectedItem == null)
+			{
+				return;
+			}
+
+			BrushStyle brushStyle = (BrushStyle)BrushStyleComboBox.SelectedItem;
+			InkDrawingAttributes inkAttr = Brush.UpdateBrushSize(brushStyle, BrushHeightSlider.Value, BrushWidthSlider.Value);
+
+			InkCanvas.InkPresenter.UpdateDefaultDrawingAttributes(inkAttr);
 			UpdateDrawingSettings();
 		}
 
@@ -251,47 +294,49 @@ namespace SketcherBook_Pro
 
 		private void AddColourFromPicker_OnTapped(object sender, TappedRoutedEventArgs e)
 		{
-			this.brushColourCollection.Add(new Rectangle
+			brushColourCollection.Add(new Rectangle
 			{
 				Style = (Style)Application.Current.Resources["ColourOptionRectangle"],
-				Fill = new SolidColorBrush(Color.FromArgb(255, (byte)this.NewColourPicker.RedValue, (byte)this.NewColourPicker.GreenValue, (byte)this.NewColourPicker.BlueValue))
+				Fill = new SolidColorBrush(Color.FromArgb(255, (byte)NewColourPicker.RedValue, (byte)NewColourPicker.GreenValue, (byte)NewColourPicker.BlueValue))
 			});
 
-			this.ColourPalleteScrollViewer.ChangeView(0.0f, double.MaxValue, 1.0f);
+			ColourPalleteScrollViewer.ChangeView(0.0f, double.MaxValue, 1.0f);
 		}
 
 		private void TriggerBackgroundColourChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (this.InkGrid == null)
-			{
-				return;
-			}
-
-			switch (this.GridBackground_ComboBox.SelectedIndex)
-			{
-				case 0:
-					this.InkGrid.Background = new SolidColorBrush(Colors.White);
-					break;
-				case 1:
-					this.InkGrid.Background = new SolidColorBrush(Colors.Black);
-					break;
-			}
+			//if(CanvasContainer == null)
+			//{
+			//	return;
+			//}
+			//switch (GridBackground_ComboBox.SelectedIndex)
+			//{
+			//	case 0:
+			//		CanvasContainer.Background = new SolidColorBrush(Colors.White);
+			//		break;
+			//	case 1:
+			//		CanvasContainer.Background = new SolidColorBrush(Colors.Black);
+			//		break;
+			//	case 2:
+			//		CanvasContainer.Background = new SolidColorBrush(Colors.DimGray);
+			//		break;
+			//}
 		}
 		private void PressureSetting_OnToggle(object sender, RoutedEventArgs e)
 		{
-			if (this.PenPressureToggleSwitch == null)
+			if (PenPressureToggleSwitch == null)
 			{
 				return;
 			}
 
-			if (this.InkCanvas_Main == null)
+			if (InkCanvas == null)
 			{
 				return;
 			}
 
-			InkDrawingAttributes drawingAttributes = this.InkCanvas_Main.InkPresenter.CopyDefaultDrawingAttributes();
-			drawingAttributes.IgnorePressure = !this.PenPressureToggleSwitch.IsOn;
-			this.InkCanvas_Main.InkPresenter.UpdateDefaultDrawingAttributes(drawingAttributes);
+			InkDrawingAttributes drawingAttributes = InkCanvas.InkPresenter.CopyDefaultDrawingAttributes();
+			drawingAttributes.IgnorePressure = !PenPressureToggleSwitch.IsOn;
+			InkCanvas.InkPresenter.UpdateDefaultDrawingAttributes(drawingAttributes);
 		}
 
 		//FullScreen Functions
@@ -301,65 +346,65 @@ namespace SketcherBook_Pro
 
 			if (enteredFullScreenSuccesfully)
 			{
-				this.ExpandToFullscreenToggleButton.Glyph = ShrinkFromFullScreen.ToString();
+				ExpandToFullscreenToggleButton.Glyph = ShrinkFromFullScreen.ToString();
 			}
-			
+
 		}
 		private void FullScreen_OnUnChecked(object sender, RoutedEventArgs e)
 		{
 			ApplicationView.GetForCurrentView().ExitFullScreenMode();
-			this.ExpandToFullscreenToggleButton.Glyph = ExpandToFullScreen.ToString();
+			ExpandToFullscreenToggleButton.Glyph = ExpandToFullScreen.ToString();
 		}
 
 		private void PenSettingsButton_OnOpened(object sender, object e)
 		{
-			this.PenSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlHighlightAccentBrush"];
+			PenSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlHighlightAccentBrush"];
 		}
 
 		private void PenSettingsButton_OnClosed(object sender, object e)
 		{
-			this.PenSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlBackgroundBaseLowBrush"];
+			PenSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlBackgroundBaseLowBrush"];
 		}
 
 		private void LayersSettingsButton_OnOpened(object sender, object e)
 		{
-			this.LayerSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlHighlightAccentBrush"];
+			LayerSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlHighlightAccentBrush"];
 		}
 
 		private void LayersSettingsButton_OnClosed(object sender, object e)
 		{
-			this.LayerSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlBackgroundBaseLowBrush"];
+			LayerSettingsButton.Background = (SolidColorBrush)Application.Current.Resources["SystemControlBackgroundBaseLowBrush"];
 		}
 
 		private void SplitView_OnPaneClosed(SplitView sender, object args)
 		{
-			this.HamburgerToggleButton.IsChecked = false;
+			HamburgerToggleButton.IsChecked = false;
 		}
 
 		private void UpdateDrawingSettings()
 		{
-			if (this.BrushWidthSlider == null || this.BrushHeightSlider == null || this.CustomBrushStyle == null)
+			if (BrushWidthSlider == null || BrushHeightSlider == null || CustomBrushStyle == null)
 			{
 				return;
 			}
 
-			if (this.CustomPropertiesHighlighterToggleSwitch == null)
+			if (CustomPropertiesHighlighterToggleSwitch == null)
 			{
 				return;
 			}
 
-			InkDrawingAttributes drawingAttributes = this.InkCanvas_Main.InkPresenter.CopyDefaultDrawingAttributes();
-			if (this.CustomPropertiesToggleSwitch.IsOn)
+			InkDrawingAttributes drawingAttributes = InkCanvas.InkPresenter.CopyDefaultDrawingAttributes();
+			if (CustomPropertiesToggleSwitch.IsOn)
 			{
-				this.BrushStyleComboBox.IsEnabled = false;
-				this.BrushThinkessSlider.IsEnabled = false;
-				drawingAttributes.Size = new Size(this.BrushWidthSlider.Value, this.BrushHeightSlider.Value);
-				drawingAttributes.DrawAsHighlighter = this.CustomPropertiesHighlighterToggleSwitch.IsOn;
+				BrushStyleComboBox.IsEnabled = false;
+				BrushThinkessSlider.IsEnabled = false;
+				drawingAttributes.Size = new Size(BrushWidthSlider.Value, BrushHeightSlider.Value);
+				drawingAttributes.DrawAsHighlighter = CustomPropertiesHighlighterToggleSwitch.IsOn;
 
-				double rotationRadians = this.BrushRotation_Slider.Value * Math.PI / 180;
+				double rotationRadians = BrushRotation_Slider.Value * Math.PI / 180;
 				drawingAttributes.PenTipTransform = Matrix3x2.CreateRotation((float)rotationRadians);
 
-				switch (this.CustomBrushStyle.SelectedIndex)
+				switch (CustomBrushStyle.SelectedIndex)
 				{
 					case 0:
 						drawingAttributes.PenTip = PenTipShape.Rectangle;
@@ -371,47 +416,52 @@ namespace SketcherBook_Pro
 			}
 			else
 			{
-				this.CustomPropertiesHighlighterToggleSwitch.IsOn = false;
+				CustomPropertiesHighlighterToggleSwitch.IsOn = false;
 
-				this.BrushStyleComboBox.IsEnabled = true;
-				this.BrushThinkessSlider.IsEnabled = true;
+				BrushStyleComboBox.IsEnabled = true;
+				BrushThinkessSlider.IsEnabled = true;
 			}
 
-			Brush.DrawBrushSizePreview(this.BrushWidthSlider.Value, this.BrushHeightSlider.Value);
-			this.InkCanvas_Main.InkPresenter.UpdateDefaultDrawingAttributes(drawingAttributes);
+			Brush.DrawBrushSizePreview(BrushWidthSlider.Value, BrushHeightSlider.Value);
+			InkCanvas.InkPresenter.UpdateDefaultDrawingAttributes(drawingAttributes);
 		}
 
 		//Layer Functions
 		private void NewLayerButton_OnTapped(object sender, TappedRoutedEventArgs e)
 		{
-			LayerManager.GlobalInkLayers.Add(new InkLayer(true, new InkStrokeContainer(), string.Format(CultureInfo.CurrentCulture,
-						ResourceLoader.GetForViewIndependentUse().GetString("LAYER_NAME_CONSTRUCTOR"), LayerManager.GlobalInkLayers.Count + 1)));
+			LayerManager.GlobalInkLayers.Add(
+				new InkLayer(true, new InkStrokeContainer(),
+				string.Format(CultureInfo.CurrentCulture,
+					ResourceLoader.GetForViewIndependentUse().GetString("LAYER_NAME_CONSTRUCTOR"),
+					LayerManager.GlobalInkLayers.Count + 1)
+				)
+			);
 		}
 		private void DeleteLayerButton_OnTapped(object sender, TappedRoutedEventArgs e)
 		{
-			foreach (object item in this.LayersListBox.SelectedItems)
+			foreach (object item in LayersListBox.SelectedItems)
 			{
 				LayerManager.GlobalInkLayers.Remove(item as InkLayer);
 			}
 		}
 		private void DeleteLayerButton_OnDragEnter(object sender, DragEventArgs e)
 		{
-			this.DeleteLayer_OnDragOver_Animation.Begin();
+			DeleteLayer_OnDragOver_Animation.Begin();
 		}
 
 		private void DeleteLayerButton_OnDragLeave(object sender, DragEventArgs e)
 		{
-			this.DeleteLayer_OnDragLeave_Animation.Begin();
+			DeleteLayer_OnDragLeave_Animation.Begin();
 		}
 
 		private void DeleteLayerButton_OnDragOver(object sender, DragEventArgs e)
 		{
-			if (this.dragedLayersCollection.Count > 0)
+			if (dragedLayersCollection.Count > 0)
 			{
 				e.AcceptedOperation = DataPackageOperation.Move;
 				e.DragUIOverride.Caption = string.Format(CultureInfo.CurrentCulture,
 					ResourceLoader.GetForViewIndependentUse().GetString("TOOLTIP_REMOVE_LAYERS"),
-					this.dragedLayersCollection.Count);
+					dragedLayersCollection.Count);
 				e.DragUIOverride.IsContentVisible = false;
 			}
 			else
@@ -421,52 +471,52 @@ namespace SketcherBook_Pro
 		}
 		private void DeleteLayerButton_OnDrop(object sender, DragEventArgs e)
 		{
-			foreach (InkLayer inkLayer in this.dragedLayersCollection)
+			foreach (InkLayer inkLayer in dragedLayersCollection)
 			{
 				LayerManager.GlobalInkLayers.Remove(inkLayer);
 			}
 
-			if (this.dragedLayersCollection.Count > 0)
+			if (dragedLayersCollection.Count > 0)
 			{
-				this.DeleteLayer_OnDragLeave_Animation.Begin();
+				DeleteLayer_OnDragLeave_Animation.Begin();
 			}
 
-			this.dragedLayersCollection.Clear();
+			dragedLayersCollection.Clear();
 		}
 		private void LockLayersToggleButtonChecked(object sender, RoutedEventArgs routedEventArgs)
 		{
-			this.LockLayersFontIcon.Glyph = LayersLockedCharcter.ToString();
-			this.LayersListBox.IsEnabled = false;
-			this.LayerNewButton.IsEnabled = false;
-			this.LayerDeleteButton.IsEnabled = false;
+			LockLayersFontIcon.Glyph = LayersLockedCharcter.ToString();
+			LayersListBox.IsEnabled = false;
+			LayerNewButton.IsEnabled = false;
+			LayerDeleteButton.IsEnabled = false;
 		}
 		private void LockLayersToggleButtonUnChecked(object sender, RoutedEventArgs routedEventArgs)
 		{
-			this.LockLayersFontIcon.Glyph = LayersUnLockedCharcter.ToString();
-			this.LayersListBox.IsEnabled = true;
-			this.LayerNewButton.IsEnabled = true;
-			this.LayerDeleteButton.IsEnabled = true;
+			LockLayersFontIcon.Glyph = LayersUnLockedCharcter.ToString();
+			LayersListBox.IsEnabled = true;
+			LayerNewButton.IsEnabled = true;
+			LayerDeleteButton.IsEnabled = true;
 		}
 		private void LayersListView_OnDragStarting(object o, DragItemsStartingEventArgs e)
 		{
 			foreach (object item in e.Items)
 			{
-				this.dragedLayersCollection.Add(item as InkLayer);
+				dragedLayersCollection.Add(item as InkLayer);
 			}
 		}
 		private void LayersViewBase_OnDragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
 		{
-			this.dragedLayersCollection.Clear();
+			dragedLayersCollection.Clear();
 		}
 
 		private void LayersView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			try
 			{
-				InkLayer layer = this.LayersListBox.SelectedItems[0] as InkLayer;
+				InkLayer layer = LayersListBox.SelectedItems[0] as InkLayer;
 				if (layer != null)
 				{
-					this.InkCanvas_Main.InkPresenter.StrokeContainer = layer.LayerStrokeContainer;
+					InkCanvas.InkPresenter.StrokeContainer = layer.LayerStrokeContainer;
 				}
 			}
 			catch (Exception)

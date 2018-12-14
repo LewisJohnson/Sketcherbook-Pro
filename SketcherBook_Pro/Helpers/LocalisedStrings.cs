@@ -4,6 +4,6 @@ namespace SketcherBook_Pro.Helpers
 {
     class LocalisedStrings
     {
-        public string this[string key] => ResourceLoader.GetForViewIndependentUse().GetString(key);
+       public string this[string key] => ResourceLoader.GetForViewIndependentUse().GetString(key);
     }
 }
