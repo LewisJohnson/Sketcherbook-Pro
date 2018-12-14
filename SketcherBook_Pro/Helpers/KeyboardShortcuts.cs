@@ -5,13 +5,13 @@ namespace SketcherBook_Pro.Helpers
 {
     public sealed class KeyboardShortcuts
     {
-        private readonly MainPage _mainPage;
-        private readonly Brush _brush;
+        private readonly MainPage mainPage;
+        private readonly Brush brush;
 
         public KeyboardShortcuts(MainPage mainPage)
         {
-            _mainPage = mainPage;
-            _brush = new Brush(mainPage);
+            this.mainPage = mainPage;
+            brush = new Brush(mainPage);
         }
 
         public void Global_OnKeyDown(object sender, KeyEventArgs e)
@@ -19,17 +19,16 @@ namespace SketcherBook_Pro.Helpers
             switch (e.VirtualKey)
             {
                 case VirtualKey.W:
-                    _mainPage.BrushThinkess_Slider.Value += 5;
-                    _brush.DrawBrushSizePreview(_mainPage.BrushThinkess_Slider.Value, false);
+                    mainPage.BrushThinkessSlider.Value += 5;
+                    brush.DrawBrushSizePreview(mainPage.BrushThinkessSlider.Value, mainPage.BrushThinkessSlider.Value);
                     break;
 
                 case VirtualKey.S:
-                    _mainPage.BrushThinkess_Slider.Value -= 5;
-                    _brush.DrawBrushSizePreview(_mainPage.BrushThinkess_Slider.Value, false);
+                    mainPage.BrushThinkessSlider.Value -= 5;
+                    brush.DrawBrushSizePreview(mainPage.BrushThinkessSlider.Value, mainPage.BrushThinkessSlider.Value);
                     break;
 
             }
-
         }
     }
 }

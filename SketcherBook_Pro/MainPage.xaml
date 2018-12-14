@@ -8,20 +8,14 @@
     mc:Ignorable="d" Loaded="MainPage_OnLoaded" 
     xmlns:Converters="using:SketcherBook_Pro.Converters" x:Name="LayoutRoot">
 
-    <Page.Resources>        
-        <!-- ReSharper disable Xaml.RedundantResource -->
-        
+    <Page.Resources>
         <!-- StoryBoards -->
-        <Storyboard x:Name="Intro_Animation">
-        </Storyboard>
-        <Storyboard x:Name="RecycleBin_OnDragEnter_Animation">
-        </Storyboard>
-        <Storyboard x:Name="RecycleBin_OnDragLeave_Animation">
-        </Storyboard>
-        <Storyboard x:Name="RightPanelHide_Animation">
-        </Storyboard>
-        <Storyboard x:Name="RightPanelShow_Animation">
-        </Storyboard>
+        <Storyboard x:Name="IntroAnimation"></Storyboard>
+        <Storyboard x:Name="RecycleBin_OnDragEnter_Animation"></Storyboard>
+        <Storyboard x:Name="RecycleBin_OnDragLeave_Animation"></Storyboard>
+        <Storyboard x:Name="RightPanelHide_Animation"></Storyboard>
+        <Storyboard x:Name="RightPanelShow_Animation"></Storyboard>
+
         <Storyboard x:Name="DeleteLayer_OnDragOver_Animation">
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Control.Background).(SolidColorBrush.Color)" Storyboard.TargetName="LayerDeleteButton">
                 <EasingColorKeyFrame KeyTime="0" Value="#33000000">
@@ -36,39 +30,14 @@
                 </EasingColorKeyFrame>
             </ColorAnimationUsingKeyFrames>
         </Storyboard>
-        <Storyboard x:Name="DeleteLayer_OnDragLeave_Animation">
-        </Storyboard>
+        <Storyboard x:Name="DeleteLayer_OnDragLeave_Animation"></Storyboard>
 
-            <!-- Converters -->
+        <!-- Converters -->
         <Converters:IntToDoubleConverter x:Key="IntToDoubleConverter" />
-        <Converters:HalfDoubleConverter x:Key="HalfDoubleConverter" />
 
-        <!-- ReSharper restore Xaml.RedundantResource -->    
     </Page.Resources>
 
     <Grid  x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState x:Name="Mobile">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="PenSettingsButtonFlyout.Placement" Value="Top"/>
-                    </VisualState.Setters>
-                </VisualState>
-
-                <VisualState x:Name="Tablet">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="641" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="PenSettingsButtonFlyout.Placement" Value="Right"/>
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition x:Name="LeftPanelColumnDefinition" Width="75"/>
@@ -91,9 +60,10 @@
                                 Content="{Binding [ACTION_SAVE], Source={StaticResource Localised}}"
                                 Tapped="OnSaveAsync" Style="{StaticResource SidePanelOptionButton}" />
 
-                        <Button x:Name="ShareButton"
+                        <!-- Does this even work? -->
+                        <!--<Button x:Name="ShareButton"
                                 Content="{Binding [ACTION_SHARE], Source={StaticResource Localised}}"
-                                Tapped="OnShare" Style="{StaticResource SidePanelOptionButton}" />
+                                Tapped="OnShare" Style="{StaticResource SidePanelOptionButton}" />-->
 
                         <Button x:Name="LoadButton"
                                 Content="{Binding [ACTION_LOAD], Source={StaticResource Localised}}"
@@ -117,9 +87,10 @@
             </SplitView.Pane>
 
             <!-- Drawing Grid -->
-            <Grid x:Name="InkGrid" x:FieldModifier="public">
-                <InkCanvas x:Name="InkCanvas_Main" x:FieldModifier="public"  />
-                <ToggleButton Visibility="Collapsed" IsChecked="True" x:Name="RightPanelExpandButton" Content="&gt;" HorizontalAlignment="Right" VerticalAlignment="Center" Height="100" Tapped="RightPanelExpandButton_Tapped"  />
+            <Grid x:Name="CanvasContainer" x:FieldModifier="public" Background="DimGray">
+                <Grid x:Name="InkGrid" x:FieldModifier="public" Margin="75,75,75,75" Background="White">
+                    <InkCanvas x:Name="InkCanvas_Main" x:FieldModifier="public"  />
+                </Grid>
             </Grid>
         </SplitView>
 
@@ -145,7 +116,7 @@
                 <Button x:Name="ShareClose" Content="{Binding [SHARE_CANCEL], Source={StaticResource Localised}}" Tapped="ShareCloseButton"  Style="{StaticResource ShareButton}" Background="Red" x:FieldModifier="public"/>
             </StackPanel>
         </Popup>
-        
+
         <!-- Intro -->
         <StackPanel Visibility="Collapsed" x:Name="IntroStack" Background="DodgerBlue" Grid.Column="1"   >
             <TextBlock x:Name="sketch" Text="{Binding [INTRO_APPNAME_SKETCHER], Source={StaticResource Localised}}" Style="{StaticResource IntroTextBlock}" RenderTransformOrigin="0.5,0.5" >
@@ -181,12 +152,12 @@
         </StackPanel>
 
         <!-- Hamburrgah Buttons -->
-        <Border x:Name="border" Grid.Column="0" Background="{ThemeResource AppBarBackgroundThemeBrush}" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" RenderTransformOrigin="0.5,0.5">
+        <Border x:Name="border" Grid.Column="0" Background="{ThemeResource AppBarBackgroundThemeBrush}" RenderTransformOrigin="0.5,0.5">
             <Border.RenderTransform>
                 <CompositeTransform/>
             </Border.RenderTransform>
             <RelativePanel>
-                
+
                 <ToggleButton Tapped="Hamburger_Click" x:Name="HamburgerToggleButton" RelativePanel.AlignTopWithPanel="True" Style="{StaticResource SidePanelToggleButton}">
                     <ToggleButton.Content>
                         <FontIcon Style="{StaticResource SidePanelFontIcon}" x:Name="Hamburger" Glyph="&#xE700;"
@@ -209,7 +180,7 @@
                                     <TextBlock x:Name="BrushStyle_TextBlock"
                                                Text="{Binding [BRUSH_STYLE], Source={StaticResource Localised}}"
                                                Style="{StaticResource SidePanelSubTitle}" />
-                                    <ComboBox x:Name="BrushStyle_ComboBox" MinWidth="110" SelectedIndex="0"
+                                    <ComboBox x:Name="BrushStyleComboBox" MinWidth="110" SelectedIndex="0"
                                               SelectionChanged="TriggerPenTypeChanged"
                                               Style="{StaticResource SidePanelComboBox}" x:FieldModifier="public">
                                         <ComboBoxItem
@@ -226,9 +197,9 @@
                                                Text="{Binding [BRUSH_THICKNESS], Source={StaticResource Localised}}"
                                                Style="{StaticResource SidePanelSubTitle}" RelativePanel.AlignLeftWithPanel="True"/>
 
-                                        <TextBlock Text="{x:Bind BrushThinkess_Slider.Value, Mode=OneWay}" RelativePanel.AlignRightWithPanel="True" Style="{StaticResource SidePanelSubTitle}"/>
+                                        <TextBlock Text="{x:Bind BrushThinkessSlider.Value, Mode=OneWay}" RelativePanel.AlignRightWithPanel="True" Style="{StaticResource SidePanelSubTitle}"/>
 
-                                        <Slider RelativePanel.Below="BrushThinkness_TextBlock" x:Name="BrushThinkess_Slider"
+                                        <Slider RelativePanel.Below="BrushThinkness_TextBlock" x:Name="BrushThinkessSlider"
                                             Minimum="1" Maximum="200" Value="5"
                                             ValueChanged="BrushThinkess_Slider_ValueChanged" Width="230"
                                             x:FieldModifier="public" />
@@ -237,12 +208,12 @@
 
                                     <StackPanel Margin="0,50,0,0">
                                         <ToggleSwitch x:Name="CustomPropertiesToggleSwitch" Header="Custom Brush Propeties" IsOn="False" x:FieldModifier="public" Toggled="CustomPropertiesToggleSwitch_Toggled" />
-                                        <Slider x:Name="BrushWidth_Slider"
+                                        <Slider x:Name="BrushWidthSlider"
                                                 Minimum="1" Maximum="200" Value="5"
                                                 ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
                                                 x:FieldModifier="public" Header="{Binding [HEIGHT], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
 
-                                        <Slider x:Name="BrushHeight_Slider"
+                                        <Slider x:Name="BrushHeightSlider"
                                                 Minimum="1" Maximum="200" Value="5"
                                                 ValueChanged="CustomeSettingSlider_OnValueChanged" Width="230"
                                                 x:FieldModifier="public" Header="{Binding [WIDTH], Source={StaticResource Localised}}" IsEnabled="{x:Bind CustomPropertiesToggleSwitch.IsOn, Mode=OneWay}"/>
